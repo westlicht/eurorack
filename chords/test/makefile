@@ -1,4 +1,4 @@
-PACKAGES       = tides/test stmlib/utils tides
+PACKAGES       = chords/test stmlib/utils chords
 
 VPATH          = $(PACKAGES)
 

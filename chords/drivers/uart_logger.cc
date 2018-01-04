@@ -8,10 +8,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-//
+// 
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-//
+// 
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19,7 +19,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-//
+// 
 // See http://creativecommons.org/licenses/MIT/ for more information.
 //
 // -----------------------------------------------------------------------------
@@ -39,7 +39,7 @@ void UartLogger::Init(uint32_t baud_rate) {
   gpio_init.GPIO_Speed = GPIO_Speed_50MHz;
   gpio_init.GPIO_Mode = GPIO_Mode_AF_PP;
   GPIO_Init(GPIOA, &gpio_init);
-
+  
   // Initialize USART.
   USART_InitTypeDef usart_init;
   usart_init.USART_BaudRate = baud_rate;
@@ -48,10 +48,10 @@ void UartLogger::Init(uint32_t baud_rate) {
   usart_init.USART_Parity = USART_Parity_No;
   usart_init.USART_HardwareFlowControl = USART_HardwareFlowControl_None;
   usart_init.USART_Mode = USART_Mode_Tx;
-
+  
   USART_Init(USART1, &usart_init);
   USART_Cmd(USART1, ENABLE);
-
+  
 }
 
 void UartLogger::Trace(uint8_t byte) {

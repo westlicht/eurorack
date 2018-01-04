@@ -8,10 +8,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-//
+// 
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-//
+// 
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19,7 +19,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-//
+// 
 // See http://creativecommons.org/licenses/MIT/ for more information.
 
 #include <stm32f10x_conf.h>
@@ -40,7 +40,7 @@
 #include "chords/drivers/leds.h"
 #include "chords/drivers/system.h"
 
-using namespace tides;
+using namespace chords;
 using namespace stmlib;
 using namespace stm_audio_bootloader;
 
@@ -59,7 +59,7 @@ PacketDecoder decoder;
 Demodulator demodulator;
 
 extern "C" {
-
+  
 void HardFault_Handler(void) { while (1); }
 void MemManage_Handler(void) { while (1); }
 void BusFault_Handler(void) { while (1); }
@@ -138,10 +138,10 @@ void TIM1_UP_IRQHandler(void) {
   if (TIM_GetITStatus(TIM1, TIM_IT_Update) == RESET) {
     return;
   }
-
+  
   TIM_ClearITPendingBit(TIM1, TIM_IT_Update);
   dac.Update(1);
-
+  
   if (!discard_samples) {
     int16_t sample = adc.value(0) >> 4;
     demodulator.PushSample(sample);
@@ -206,7 +206,7 @@ int main(void) {
     } else {
       demodulator.ProcessAtLeast(32);
     }
-
+    
     while (demodulator.available() && !error && !exit_updater) {
       uint8_t symbol = demodulator.NextSymbol();
       PacketDecoderState state = decoder.ProcessSymbol(symbol);
@@ -249,7 +249,7 @@ int main(void) {
       InitializeReception();
     }
   }
-
+  
   adc.DeInit();
   Uninitialize();
   JumpTo(kStartAddress);

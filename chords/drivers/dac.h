@@ -8,10 +8,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-//
+// 
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-//
+// 
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19,7 +19,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-//
+// 
 // See http://creativecommons.org/licenses/MIT/ for more information.
 //
 // -----------------------------------------------------------------------------
@@ -41,16 +41,16 @@ class Dac {
  public:
   Dac() { }
   ~Dac() { }
-
+  
   void Init();
-
+  
   void Write(uint16_t channel_1, uint16_t channel_2) {
     data_[0] = channel_1;
     data_[1] = channel_2;
   }
-
+  
   bool ready() { return active_channel_ == 0; }
-
+  
   inline void Update() {
     GPIOB->BSRR = kPinSS;
     GPIOB->BRR = kPinSS;
@@ -66,7 +66,7 @@ class Dac {
       active_channel_ = 0;
     }
   }
-
+  
   inline void Update(uint8_t channel) {
     GPIOB->BSRR = kPinSS;
     GPIOB->BRR = kPinSS;
@@ -80,11 +80,11 @@ class Dac {
       SPI2->DR = (data_[1] << 8) & 0xffff;
     }
   }
-
+ 
  private:
   uint16_t data_[2];
   uint8_t active_channel_;
-
+  
   DISALLOW_COPY_AND_ASSIGN(Dac);
 };
 

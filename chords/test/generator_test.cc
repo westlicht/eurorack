@@ -18,9 +18,9 @@
 #include <cstring>
 #include <cstdlib>
 
-#include "tides/generator.h"
+#include "chords/generator.h"
 
-using namespace tides;
+using namespace chords;
 using namespace stmlib;
 
 const uint32_t kSampleRate = 48000;

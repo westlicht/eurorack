@@ -8,10 +8,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-//
+// 
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-//
+// 
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19,14 +19,12 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-//
+// 
 // See http://creativecommons.org/licenses/MIT/ for more information.
 //
 // -----------------------------------------------------------------------------
 //
 // User interface.
-
-#if 0
 
 #include "chords/ui.h"
 
@@ -51,18 +49,18 @@ void Ui::Init(Generator* generator, CvScaler* cv_scaler) {
   mode_ = factory_testing_switch_.Read()
       ? UI_MODE_NORMAL
       : UI_MODE_FACTORY_TESTING;
-
+  
   generator_ = generator;
   cv_scaler_ = cv_scaler;
-
+  
   if (!mode_storage.ParsimoniousLoad(&settings_, &version_token_)) {
     mode_counter_ = 1;
     range_counter_ = 2;
-    generator->set_sync(false);
+    // generator->set_sync(false);
   } else {
     mode_counter_ = settings_.mode;
     range_counter_ = 2 - settings_.range;
-    generator->set_sync(settings_.sync);
+    // generator->set_sync(settings_.sync);
   }
 
   UpdateMode();
@@ -71,9 +69,9 @@ void Ui::Init(Generator* generator, CvScaler* cv_scaler) {
 }
 
 void Ui::SaveState() {
-  settings_.mode = generator_->mode();
-  settings_.range = generator_->range();
-  settings_.sync = generator_->sync();
+  // settings_.mode = generator_->mode();
+  // settings_.range = generator_->range();
+  // settings_.sync = generator_->sync();
   mode_storage.ParsimoniousSave(settings_, &version_token_);
 }
 
@@ -90,30 +88,30 @@ const uint16_t thresholds[ADC_CHANNEL_LAST][2] = {
 void Ui::UpdateFactoryTestingFlags(
     uint8_t gate_input_flags,
     const uint16_t* adc_values) {
-  red_ = switches_.pressed(1);
-  green_ = switches_.pressed(0);
-  orange_ = gate_input_flags & CONTROL_GATE;
-  orange_ |= gate_input_flags & CONTROL_FREEZE;
-  orange_ |= gate_input_flags & CONTROL_CLOCK;
-
-  for (uint16_t i = 0; i < ADC_CHANNEL_LAST; ++i) {
-    uint16_t value = adc_values[i];
-    if (i == ADC_CHANNEL_FM_ATTENUVERTER) {
-      value = ~value;
-    }
-    green_ |= value < thresholds[i][0];
-    if (i == 0) {
-      orange_ |= value > thresholds[i][1];
-    } else {
-      red_ |= value > thresholds[i][1];
-    }
-  }
+  // red_ = switches_.pressed(1);
+  // green_ = switches_.pressed(0);
+  // orange_ = gate_input_flags & CONTROL_GATE;
+  // orange_ |= gate_input_flags & CONTROL_FREEZE;
+  // orange_ |= gate_input_flags & CONTROL_CLOCK;
+  
+  // for (uint16_t i = 0; i < ADC_CHANNEL_LAST; ++i) {
+  //   uint16_t value = adc_values[i];
+  //   if (i == ADC_CHANNEL_FM_ATTENUVERTER) {
+  //     value = ~value;
+  //   }
+  //   green_ |= value < thresholds[i][0];
+  //   if (i == 0) {
+  //     orange_ |= value > thresholds[i][1];
+  //   } else {
+  //     red_ |= value > thresholds[i][1];
+  //   }
+  // }
 }
 
 void Ui::Poll() {
   system_clock.Tick();
   switches_.Debounce();
-
+  
   for (uint8_t i = 0; i < kNumSwitches; ++i) {
     if (switches_.just_pressed(i)) {
       queue_.AddEvent(CONTROL_SWITCH, i, 0);
@@ -134,55 +132,65 @@ void Ui::Poll() {
       press_time_[i] = 0;
     }
   }
-
+  
   switch (mode_) {
     case UI_MODE_NORMAL:
       {
-        GeneratorMode mode = generator_->mode();
-        leds_.set_mode(mode == GENERATOR_MODE_AR, mode == GENERATOR_MODE_AD);
+        GeneratorWaveform waveform = generator_->waveform();
+        switch (waveform) {
+        case GENERATOR_WAVEFORM_SINE:
+          leds_.set_mode(false, false);
+          break;
+        case GENERATOR_WAVEFORM_TRIANGLE:
+          leds_.set_mode(true, false);
+          break;
+        case GENERATOR_WAVEFORM_SAW:
+          leds_.set_mode(false, true);
+          break;
+        case GENERATOR_WAVEFORM_SQUARE:
+          leds_.set_mode(true, true);
+          break;
+        default:
+          break;
+        }
+        // GeneratorMode mode = generator_->mode();
+        // leds_.set_mode(mode == GENERATOR_MODE_AR, mode == GENERATOR_MODE_AD);
 
-        GeneratorRange range = generator_->range();
-        switch (range) {
-          case GENERATOR_RANGE_LOW:
-            leds_.set_rate(0, 65535);
-            break;
-          case GENERATOR_RANGE_MEDIUM:
-            if (generator_->sync()) {
-              leds_.set_rate(8192, 16384);
-            } else {
-              leds_.set_rate(0);
-            }
-            break;
-          case GENERATOR_RANGE_HIGH:
-            leds_.set_rate(65535, 0);
-            break;
-        }
-        bool blink_rate_led = generator_->sync() && \
-            system_clock.milliseconds() & 128;
-        if (blink_rate_led) {
-          leds_.set_rate(0);
-        }
+        // GeneratorRange range = generator_->range();
+        // switch (range) {
+        //   case GENERATOR_RANGE_LOW:
+        //     leds_.set_rate(0, 65535);
+        //     break;
+        //   case GENERATOR_RANGE_MEDIUM:
+        //     if (generator_->sync()) {
+        //       leds_.set_rate(8192, 16384);
+        //     } else {
+        //       leds_.set_rate(0);
+        //     }
+        //     break;
+        //   case GENERATOR_RANGE_HIGH:
+        //     leds_.set_rate(65535, 0);
+        //     break;
+        // }
+        // bool blink_rate_led = generator_->sync() && system_clock.milliseconds() & 128;
+        // if (blink_rate_led) {
+        //   leds_.set_rate(0);
+        // }
       }
       break;
-
+      
     case UI_MODE_CALIBRATION_C2:
       leds_.set_mode(true);
       leds_.set_rate(65535);
       leds_.set_value(65535);
       break;
-
+      
     case UI_MODE_CALIBRATION_C4:
       leds_.set_mode(false, true);
       leds_.set_rate(0, 65535);
       leds_.set_value(0, 65535);
       break;
-
-    case UI_MODE_PAQUES:
-      leds_.set_mode(true, false);
-      leds_.set_rate(65535, 0);
-      leds_.set_value(65535, 0);
-      break;
-
+      
     case UI_MODE_FACTORY_TESTING:
       if (orange_) {
         leds_.set_mode(true, true);
@@ -203,8 +211,14 @@ void Ui::Poll() {
       }
       break;
   }
-
+  
   leds_.Write();
+}
+
+inline void Ui::UpdateWaveform() {
+  uint8_t i = waveform_counter_ % GENERATOR_WAVEFORM_LAST;
+  generator_->set_waveform(static_cast<GeneratorWaveform>(i));
+  SaveState();
 }
 
 inline void Ui::UpdateMode() {
@@ -212,7 +226,7 @@ inline void Ui::UpdateMode() {
   if (i == 3) {
     i = 1;
   }
-  generator_->set_mode(static_cast<GeneratorMode>(i));
+  // generator_->set_mode(static_cast<GeneratorMode>(i));
   SaveState();
 }
 
@@ -221,7 +235,7 @@ inline void Ui::UpdateRange() {
   if (i == 3) {
     i = 1;
   }
-  generator_->set_range(static_cast<GeneratorRange>(2 - i));
+  // generator_->set_range(static_cast<GeneratorRange>(2 - i));
   SaveState();
 }
 
@@ -233,7 +247,7 @@ void Ui::OnSwitchPressed(const Event& e) {
   switch (e.control_id) {
     case 0:
       break;
-
+      
     case 1:
       break;
   }
@@ -242,8 +256,8 @@ void Ui::OnSwitchPressed(const Event& e) {
 void Ui::OnSwitchReleased(const Event& e) {
   if (mode_ == UI_MODE_FACTORY_TESTING) {
     return;
-  } else if (mode_ == UI_MODE_PAQUES) {
-    mode_ = UI_MODE_NORMAL;
+  // } else if (mode_ == UI_MODE_PAQUES) {
+  //   mode_ = UI_MODE_NORMAL;
   } else if (mode_ == UI_MODE_CALIBRATION_C2) {
     if (e.data > kLongPressDuration) {
       ++long_press_counter_;
@@ -258,10 +272,10 @@ void Ui::OnSwitchReleased(const Event& e) {
     mode_ = UI_MODE_NORMAL;
     if (e.control_id == 0) {
       cv_scaler_->Calibrate();
-    } else if (e.control_id == 1 && long_press_counter_ == 1 &&
+    }/* else if (e.control_id == 1 && long_press_counter_ == 1 &&
                e.data > kLongPressDuration) {
       mode_ = UI_MODE_PAQUES;
-    }
+    }*/
   } else {
     long_press_counter_ = 0;
     switch (e.control_id) {
@@ -270,18 +284,21 @@ void Ui::OnSwitchReleased(const Event& e) {
             cv_scaler_->can_enter_calibration()) {
           mode_ = UI_MODE_CALIBRATION_C2;
         } else {
-          ++mode_counter_;
-          UpdateMode();
+          generator_->next_waveform();
+          // ++waveform_counter_;
+          // UpdateWaveform();
+          // ++mode_counter_;
+          // UpdateMode();
         }
         break;
 
       case 1:
         if (e.data > kLongPressDuration) {
-          generator_->set_sync(!generator_->sync());
-          SaveState();
+          // generator_->set_sync(!generator_->sync());
+          // SaveState();
         } else {
-          ++range_counter_;
-          UpdateRange();
+          // ++range_counter_;
+          // UpdateRange();
         }
         break;
     }
@@ -305,5 +322,3 @@ void Ui::DoEvents() {
 }
 
 }  // namespace chords
-
-#endif

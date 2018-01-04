@@ -8,10 +8,10 @@
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-//
+// 
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-//
+// 
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19,14 +19,12 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-//
+// 
 // See http://creativecommons.org/licenses/MIT/ for more information.
 //
 // -----------------------------------------------------------------------------
 //
 // Settings
-
-#if 0
 
 #ifndef CHORDS_UI_H_
 #define CHORDS_UI_H_
@@ -48,7 +46,6 @@ enum UiMode {
   UI_MODE_NORMAL,
   UI_MODE_CALIBRATION_C2,
   UI_MODE_CALIBRATION_C4,
-  UI_MODE_PAQUES,
   UI_MODE_FACTORY_TESTING
 };
 
@@ -63,7 +60,7 @@ class Ui {
  public:
   Ui() { }
   ~Ui() { }
-
+  
   void Init(Generator* generator, CvScaler* cv_scaler);
   void Poll();
   void DoEvents();
@@ -80,43 +77,44 @@ class Ui {
       }
     }
   }
-
+  
   inline UiMode mode() const { return mode_; }
 
  private:
   void OnSwitchPressed(const stmlib::Event& e);
   void OnSwitchReleased(const stmlib::Event& e);
+  void UpdateWaveform();
   void UpdateMode();
   void UpdateRange();
   void SaveState();
 
   stmlib::EventQueue<16> queue_;
-
+  
   bool red_;
   bool green_;
   bool orange_;
-
+  
   Leds leds_;
   Switches switches_;
   FactoryTestingSwitch factory_testing_switch_;
   uint32_t press_time_[kNumSwitches];
   UiMode mode_;
-
+  
   Generator* generator_;
   CvScaler* cv_scaler_;
-
+  
   Settings settings_;
   uint16_t version_token_;
 
+  uint8_t waveform_counter_;
+  
   uint8_t mode_counter_;
   uint8_t range_counter_;
   uint8_t long_press_counter_;
-
+  
   DISALLOW_COPY_AND_ASSIGN(Ui);
 };
 
 }  // namespace chords
 
 #endif  // CHORDS_UI_H_
-
-#endif

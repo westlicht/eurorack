@@ -1,17 +1,17 @@
 // Copyright 2013 Olivier Gillet.
-//
+// 
 // Author: Olivier Gillet (ol.gillet@gmail.com)
-//
+// 
 // Permission is hereby granted, free of charge, to any person obtaining a copy
 // of this software and associated documentation files (the "Software"), to deal
 // in the Software without restriction, including without limitation the rights
 // to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
 // copies of the Software, and to permit persons to whom the Software is
 // furnished to do so, subject to the following conditions:
-//
+// 
 // The above copyright notice and this permission notice shall be included in
 // all copies or substantial portions of the Software.
-//
+// 
 // THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
 // IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
 // FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
@@ -19,7 +19,7 @@
 // LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
 // OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN
 // THE SOFTWARE.
-//
+// 
 // See http://creativecommons.org/licenses/MIT/ for more information.
 
 #include <stm32f10x_conf.h>
@@ -30,11 +30,11 @@
 #include "chords/drivers/gate_output.h"
 #include "chords/drivers/system.h"
 #include "chords/cv_scaler.h"
-// #include "chords/generator.h"
-// #include "chords/plotter.h"
-// #include "chords/ui.h"
-
+#include "chords/generator.h"
+#include "chords/ui.h"
 #include "chords/analog_oscillator.h"
+#include "chords/chord.h"
+
 
 using namespace chords;
 using namespace stmlib;
@@ -44,12 +44,10 @@ CvScaler cv_scaler;
 Dac dac;
 GateOutput gate_output;
 GateInput gate_input;
-// Generator generator;
-// Plotter plotter;
+Generator generator;
 System sys;
-// Ui ui;
+Ui ui;
 
-AnalogOscillator oscs[3];
 
 // Default interrupt handlers.
 extern "C" {
@@ -70,8 +68,8 @@ void PendSV_Handler() { }
 // * a 6kHz clock for reading and smoothing the ADC values (at the exception
 //   of the LEVEL CV which is read at the sample rate).
 // static uint32_t dac_divider = 0;
-// static uint32_t adc_divider = 0;
-// static const bool debug_rendering = false;
+static uint32_t adc_divider = 0;
+static const bool debug_rendering = false;
 
 extern "C" {
 
@@ -79,7 +77,7 @@ void SysTick_Handler() {
   // if (ui.mode() == UI_MODE_FACTORY_TESTING) {
   //   ui.UpdateFactoryTestingFlags(gate_input.Read(), adc.values());
   // }
-  // ui.Poll();
+  ui.Poll();
 }
 
 // static uint32_t saw_counter = 0;
@@ -90,6 +88,31 @@ void TIM1_UP_IRQHandler(void) {
   }
   TIM_ClearITPendingBit(TIM1, TIM_IT_Update);
 
+  // if (dac.ready()) {
+  //   dac.Write(saw_counter >> 16, saw_counter >> 16);
+  //   saw_counter += 8947848;
+  //   gate_output.Write(saw_counter & 0x80000000, saw_counter & 0x80000000);
+  // }
+
+  if (dac.ready()) {
+    cv_scaler.ProcessSampleRate(adc.values());
+
+    int16_t sample = generator.GetSample();
+
+    // uint32_t uni = sample;
+    int32_t bi = sample; //static_cast<int32_t>(sample);
+
+    int32_t level = cv_scaler.level();
+    bi = bi * level >> 16;
+
+    dac.Write(sample + 32767, bi + 32767);
+  }
+
+  ++adc_divider;
+  if ((adc_divider & 7) == 0) {
+    cv_scaler.ProcessControlRate(adc.values());
+  }
+  
   dac.Update();
   // if (ui.mode() == UI_MODE_FACTORY_TESTING) {
   //   if (dac.ready()) {
@@ -142,17 +165,9 @@ void Init() {
   dac.Init();
   gate_output.Init();
   gate_input.Init();
+  generator.Init();
+  ui.Init(&generator, &cv_scaler);
 
-  for (int i = 0; i < 3; ++i) {
-    AnalogOscillator &osc = oscs[i];
-    osc.Init();
-    osc.set_shape(OSC_SHAPE_SAW);
-    osc.set_pitch(1000);
-  }
-
-  // generator.Init();
-  // plotter.Init(plotter_program, sizeof(plotter_program) / sizeof(PlotInstruction));
-  // ui.Init(&generator, &cv_scaler);
   sys.StartTimers();
 }
 
@@ -172,6 +187,15 @@ int main(void) {
     //     gate_output.Write(false, false);
     //   }
     // }
-    // ui.DoEvents();
+
+    if (generator.writable_block()) {
+      generator.set_quality(ChordQuality(cv_scaler.shape() / (0xffff / CHORD_QUALITY_LAST)));
+      generator.set_inversion(ChordInversion(cv_scaler.slope() / (0xffff / CHORD_INVERSION_LAST)));
+      generator.set_voicing(ChordVoicing(cv_scaler.smoothness() / (0xffff / CHORD_VOICING_LAST)));
+      generator.set_pitch(cv_scaler.pitch());
+      generator.Process(gate_input.Read());
+    }
+
+    ui.DoEvents();
   }
 }
